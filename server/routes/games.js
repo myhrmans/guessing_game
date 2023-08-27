@@ -11,7 +11,7 @@ const generateRandomNumber = () => {
     return Math.floor(Math.random() * randomNumberMaximum);
 };
 
-//router.use(passport.authenticate('azure-ad-bearer', { session: false }));
+router.use(passport.authenticate('oauth-bearer', { session: false }));
 //const requireAuth = passport.authenticate('oauth-bearer', { session: false });
 
 router.post('/start-game', async (req, res) => {
