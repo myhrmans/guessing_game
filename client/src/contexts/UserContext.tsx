@@ -1,7 +1,7 @@
 import React, { createContext, FC, ReactNode, useContext, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { browserLocalPersistence, createUserWithEmailAndPassword, onAuthStateChanged, setPersistence, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
 import { auth } from "../auth/authConfig";
 import { useNavigate } from 'react-router-dom';
 
@@ -44,7 +44,6 @@ export const AuthContextProvider: FC<UserContextProviderProps> = ({
 
   const signIn = async (email: string, password: string) => {
     try {
-      await setPersistence(auth, browserLocalPersistence);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       const idToken = await user.getIdToken();
