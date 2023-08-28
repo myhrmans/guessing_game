@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Button, Paper, Typography } from '@mui/material';
-import { startNewGame, makeGuess } from '../functions/gameUtils';
+import { startNewGame, makeGuess, getGame } from '../functions/gameUtils';
 import { UserAuth } from '../contexts/UserContext';
 import GameControls from '../components/GameControls';
+import Cookies from 'js-cookie';
 
 const GamePage = () => {
     const [numberInput, setNumberInput] = useState<string>('');
@@ -10,6 +11,14 @@ const GamePage = () => {
     const [randomNumber, setRandomNumber] = useState<number | null>(null);
     const [gameId, setGameId] = useState<string | null>(null);
     const { user, logout, token } = UserAuth();
+
+    useEffect(() => {
+        const activeGameId = Cookies.get('activeGame');
+        if (activeGameId) {
+            setGameId(activeGameId);
+            getGame(token, gameId, setRandomNumber)
+        }
+    }, [gameId]);
 
     const handleClear = () => {
         setNumberInput('');
