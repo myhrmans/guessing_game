@@ -1,19 +1,15 @@
-import { Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
-import { useAccessToken } from '../auth/useAccessToken';
+import { Box, Button, Paper, Typography } from '@mui/material';
 import { startNewGame, makeGuess } from '../functions/gameUtils';
+import { UserAuth } from '../contexts/UserContext';
+import GameControls from '../components/GameControls';
 
-interface IGamePage {
-    userName?: string;
-}
-
-const GamePage: React.FC<IGamePage> = ({ userName }) => {
+const GamePage = () => {
     const [numberInput, setNumberInput] = useState<string>('');
     const [result, setResult] = useState<string | null>(null);
     const [randomNumber, setRandomNumber] = useState<number | null>(null);
     const [gameId, setGameId] = useState<string | null>(null);
-
-    const accessToken = useAccessToken();
+    const { user, logout, token } = UserAuth();
 
     const handleClear = () => {
         setNumberInput('');
@@ -21,12 +17,15 @@ const GamePage: React.FC<IGamePage> = ({ userName }) => {
     };
 
     const handleStartNewGame = async () => {
-        startNewGame(accessToken, setGameId, setRandomNumber, setResult, setNumberInput);
+        startNewGame(token, setGameId, setRandomNumber, setResult, setNumberInput);
     };
 
     const handleGuess = async () => {
-        makeGuess(accessToken, gameId, numberInput, setRandomNumber, setResult);
+        makeGuess(token, gameId, numberInput, setRandomNumber, setResult);
     };
+
+    //For cheating :)
+    console.log('randomNumber: ', randomNumber);
 
     return (
         <Box
@@ -51,7 +50,7 @@ const GamePage: React.FC<IGamePage> = ({ userName }) => {
                 }}
             >
                 <Typography variant="h6" sx={{ marginBottom: '1rem' }}>
-                    Welcome {userName}
+                    Welcome {user?.email}
                 </Typography>
                 <Typography variant="h4" sx={{ marginBottom: '1rem' }}>
                     Guess the number
@@ -62,30 +61,19 @@ const GamePage: React.FC<IGamePage> = ({ userName }) => {
                     </Typography>
                 )}
                 {randomNumber && (
-                    <>
-                        <Typography variant="h6" sx={{ marginBottom: '1rem' }}>
-                            Random Number: {randomNumber}
-                        </Typography>
-                        <TextField
-                            value={numberInput}
-                            onChange={(e) => setNumberInput(e.target.value)}
-                            sx={{ backgroundColor: 'white', marginBottom: '1rem' }}
-                        />
-                        <Stack spacing={2} direction="row">
-                            <Button onClick={handleGuess} variant="contained">
-                                Guess
-                            </Button>
-                            <Button onClick={handleClear} variant="contained" color="secondary">
-                                Clear
-                            </Button>
-                        </Stack>
-                    </>
+                    <GameControls
+                        numberInput={numberInput}
+                        setNumberInput={setNumberInput}
+                        handleGuess={handleGuess}
+                        handleClear={handleClear}
+                    />
                 )}
                 {!randomNumber && (
                     <Button onClick={handleStartNewGame} variant="contained" sx={{ marginTop: '1rem' }}>
                         Start a new game
                     </Button>
                 )}
+                <Button onClick={logout}>Logout</Button>
             </Paper>
         </Box>
     );

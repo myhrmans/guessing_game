@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 export async function startNewGame(
@@ -46,7 +45,7 @@ export async function makeGuess(
 
         if (response.data.correct) {
             setResult('Congratulations! You guessed the correct number.');
-            setRandomNumber(null); // Set random number to null to ask for a new game
+            setRandomNumber(null); //Set random number to null to ask for a new game
 
             await axios.post(
                 '/delete-game',

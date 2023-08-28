@@ -2,16 +2,50 @@ import express from 'express';
 import sql from 'mssql';
 import { v4 as uuidv4 } from 'uuid';
 import configDB from '../config/database-config.js';
-import passport from '../config/passport-config.js';
+import admin from 'firebase-admin'
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const serviceAccount = require("../config/serviceAccountKey.json");
 
 const router = express.Router();
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const verifyFirebaseToken = async (token) => {
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      return decodedToken;
+    } catch (error) {
+      throw new Error("Invalid Firebase Token");
+    }
+  };
+
+  const verifyTokenMiddleware = async (req, res, next) => {
+    const token = req.header("Authorization")?.split("Bearer ")[1];
+  
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+  
+    try {
+      const decodedToken = await verifyFirebaseToken(token);
+      req.user = decodedToken; // Attach user information to the request object for later use
+      next();
+    } catch (error) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+  };
+
+router.use(verifyTokenMiddleware);
+
 
 const randomNumberMaximum = 10000;
 const generateRandomNumber = () => {
     return Math.floor(Math.random() * randomNumberMaximum);
 };
 
-router.use(passport.authenticate('oauth-bearer', { session: false }));
+//router.use(passport.authenticate('oauth-bearer', { session: false }));
 //const requireAuth = passport.authenticate('oauth-bearer', { session: false });
 
 router.post('/start-game', async (req, res) => {
