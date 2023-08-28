@@ -24,7 +24,8 @@ const verifyFirebaseToken = async (token) => {
   };
 
 const verifyTokenMiddleware = async (req, res, next) => {
-  const token = req.header("Authorization")?.split("Bearer ")[1];
+  const authHeader = req.header("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.split("Bearer ")[1] : undefined;
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -94,6 +95,34 @@ router.post('/make-guess', async (req, res) => {
         console.error(error);
         res.status(500).send({ error: 'An error occurred while processing your guess.' });
     }
+});
+
+router.get('/get-game', async (req, res) => {
+  const gameId = req.query.gameId;
+  
+  if (!gameId) {
+      return res.status(400).json({ error: 'Missing gameId' });
+  }
+
+  const query = `
+      SELECT random_number, finished
+      FROM games
+      WHERE game_id = @gameId;
+  `;
+  try {
+    const pool = await sql.connect(configDB);
+    const result = await pool.request().input('gameId', sql.UniqueIdentifier, gameId).query(query);
+
+    if (result.recordset.length === 0) {
+        return res.status(404).json({ error: 'Game not found' });
+    }
+
+    const { random_number, finished } = result.recordset[0];
+    res.json({ gameId, randomNumber: random_number, finished });
+} catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while fetching the game' });
+}
 });
 
 //Vad ska hända med spel som inte blir färdiga? Sparas som finished=false i databasen?
