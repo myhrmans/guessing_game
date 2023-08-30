@@ -1,24 +1,25 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Paper, Typography } from '@mui/material';
-import { startNewGame, makeGuess, getGame } from '../functions/gameUtils';
+import { Button, Typography } from '@mui/material';
+import Cookies from 'js-cookie';
+import { startNewGame, makeGuess, getGame } from '../utils/gameUtils';
 import { UserAuth } from '../contexts/UserContext';
 import GameControls from '../components/GameControls';
-import Cookies from 'js-cookie';
+import GameBox from '../components/GameBox';
 
 const GamePage = () => {
     const [numberInput, setNumberInput] = useState<string>('');
     const [result, setResult] = useState<string | null>(null);
     const [randomNumber, setRandomNumber] = useState<number | null>(null);
     const [gameId, setGameId] = useState<string | null>(null);
-    const { user, logout, token } = UserAuth();
+    const { token } = UserAuth();
 
     useEffect(() => {
         const activeGameId = Cookies.get('activeGame');
         if (activeGameId) {
             setGameId(activeGameId);
-            getGame(token, gameId, setRandomNumber)
+            getGame(token, gameId, setRandomNumber);
         }
-    }, [gameId]);
+    }, [gameId, token]);
 
     const handleClear = () => {
         setNumberInput('');
@@ -33,58 +34,38 @@ const GamePage = () => {
         makeGuess(token, gameId, numberInput, setRandomNumber, setResult);
     };
 
-    //For cheating :)
-    console.log('randomNumber: ', randomNumber);
+    console.log('For cheating: ', randomNumber);
+
+    const paperSx = {
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+    };
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '80vh',
-            }}
-        >
-            <Paper
-                elevation={4}
-                sx={{
-                    width: 500,
-                    height: 300,
-                    padding: '1rem',
-                    background: 'rgba(212,226,235, 0.6)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}
-            >
-                <Typography variant="h6" sx={{ marginBottom: '1rem' }}>
-                    Welcome {user?.email}
+        <GameBox paperSx={paperSx}>
+            <Typography variant="h4" sx={{ marginBottom: '1rem' }}>
+                Guess the number
+            </Typography>
+            {result && (
+                <Typography variant="body2" sx={{ marginBottom: '1rem' }}>
+                    {result}
                 </Typography>
-                <Typography variant="h4" sx={{ marginBottom: '1rem' }}>
-                    Guess the number
-                </Typography>
-                {result && (
-                    <Typography variant="body1" sx={{ marginBottom: '1rem' }}>
-                        {result}
-                    </Typography>
-                )}
-                {randomNumber && (
-                    <GameControls
-                        numberInput={numberInput}
-                        setNumberInput={setNumberInput}
-                        handleGuess={handleGuess}
-                        handleClear={handleClear}
-                    />
-                )}
-                {!randomNumber && (
-                    <Button onClick={handleStartNewGame} variant="contained" sx={{ marginTop: '1rem' }}>
-                        Start a new game
-                    </Button>
-                )}
-                <Button onClick={logout}>Logout</Button>
-            </Paper>
-        </Box>
+            )}
+            {randomNumber && (
+                <GameControls
+                    numberInput={numberInput}
+                    setNumberInput={setNumberInput}
+                    handleGuess={handleGuess}
+                    handleClear={handleClear}
+                />
+            )}
+            {!randomNumber && (
+                <Button onClick={handleStartNewGame} variant="contained" sx={{ marginTop: 2 }}>
+                    Start a new game
+                </Button>
+            )}
+        </GameBox>
     );
 };
 
