@@ -1,6 +1,8 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
+const apiUrl = process.env.REACT_APP_API;
+
 export async function startNewGame(
     accessToken: string | undefined,
     setGameId: React.Dispatch<React.SetStateAction<string | null>>,
@@ -9,7 +11,7 @@ export async function startNewGame(
     setNumberInput: React.Dispatch<React.SetStateAction<string>>
 ) {
     try {
-        const response = await axios.post('/start-game', null, {
+        const response = await axios.post(`${apiUrl}/start-game`, null, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
@@ -35,7 +37,7 @@ export async function makeGuess(
 ) {
     try {
         const response = await axios.post(
-            '/make-guess',
+            `${apiUrl}/make-guess`,
             {
                 gameId: gameId,
                 guess: parseInt(numberInput),
@@ -52,7 +54,7 @@ export async function makeGuess(
             setRandomNumber(null); //Set random number to null to ask for a new game
 
             await axios.post(
-                '/delete-game',
+                `${apiUrl}/delete-game`,
                 {
                     gameId: gameId,
                 },
@@ -82,7 +84,7 @@ export async function getGame(
         return;
     }
     try {
-        const response = await axios.get(`/get-game?gameId=${gameId}`, {
+        const response = await axios.get(`${apiUrl}/get-game?gameId=${gameId}`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },

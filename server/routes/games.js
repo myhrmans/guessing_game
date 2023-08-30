@@ -24,7 +24,7 @@ const verifyTokenMiddleware = async (req, res, next) => {
     const authHeader = req.header('Authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split('Bearer ')[1] : undefined;
     if (!token) {
-        return res.status(401).json({ message: 'Unauthorized' }); //this is where i'm getting the error message.
+        return res.status(401).json({ message: 'Unauthorized' });
     }
 
     try {
