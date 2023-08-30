@@ -34,8 +34,11 @@ const GamePage = () => {
         makeGuess(token, gameId, numberInput, setRandomNumber, setResult);
     };
 
-    console.log('For cheating: ', randomNumber);
+    useEffect(() => {
+        console.log('For cheating: ', randomNumber);
+    }, [randomNumber])
 
+    
     const paperSx = {
         justifyContent: 'center',
         alignItems: 'center',
