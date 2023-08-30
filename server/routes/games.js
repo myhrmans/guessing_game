@@ -3,15 +3,12 @@ import sql from 'mssql';
 import { v4 as uuidv4 } from 'uuid';
 import configDB from '../config/database-config.js';
 import admin from 'firebase-admin';
-import { createRequire } from 'module';
-
-//Read json file the ES module way
-const require = createRequire(import.meta.url);
-const serviceAccount = require('../config/serviceAccountKey.json');
+  
+const serviceAccountKey = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
 
 const router = express.Router();
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(serviceAccountKey),
 });
 
 const verifyFirebaseToken = async (token) => {
