@@ -2,42 +2,41 @@ import express from 'express';
 import sql from 'mssql';
 import { v4 as uuidv4 } from 'uuid';
 import configDB from '../config/database-config.js';
-import admin from 'firebase-admin'
-import { createRequire } from "module";
+import admin from 'firebase-admin';
+import { createRequire } from 'module';
 
 //Read json file the ES module way
 const require = createRequire(import.meta.url);
-const serviceAccount = require("../config/serviceAccountKey.json");
+const serviceAccount = require('../config/serviceAccountKey.json');
 
 const router = express.Router();
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
 });
 
 const verifyFirebaseToken = async (token) => {
     try {
-      const decodedToken = await admin.auth().verifyIdToken(token);
-      return decodedToken;
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        return decodedToken;
     } catch (error) {
-      throw new Error("Invalid Firebase Token");
+        throw new Error('Invalid Firebase Token');
     }
-  };
+};
 
 const verifyTokenMiddleware = async (req, res, next) => {
-  const authHeader = req.header("Authorization");
-  const token = authHeader?.startsWith("Bearer ") ? authHeader.split("Bearer ")[1] : undefined;
+    const authHeader = req.header('Authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split('Bearer ')[1] : undefined;
+    if (!token) {
+        return res.status(401).json({ message: 'Unauthorized' }); //this is where i'm getting the error message.
+    }
 
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  try {
-    const decodedToken = await verifyFirebaseToken(token);
-    req.user = decodedToken; // Attach user information to the request object for later use
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+    try {
+        const decodedToken = await verifyFirebaseToken(token);
+        req.user = decodedToken;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
 };
 
 router.use(verifyTokenMiddleware);
@@ -98,48 +97,47 @@ router.post('/make-guess', async (req, res) => {
 });
 
 router.get('/get-game', async (req, res) => {
-  const gameId = req.query.gameId;
-  
-  if (!gameId) {
-      return res.status(400).json({ error: 'Missing gameId' });
-  }
+    const gameId = req.query.gameId;
 
-  const query = `
+    if (!gameId) {
+        return res.status(400).json({ error: 'Missing gameId' });
+    }
+
+    const query = `
       SELECT random_number, finished
       FROM games
       WHERE game_id = @gameId;
   `;
-  try {
-    const pool = await sql.connect(configDB);
-    const result = await pool.request().input('gameId', sql.UniqueIdentifier, gameId).query(query);
+    try {
+        const pool = await sql.connect(configDB);
+        const result = await pool.request().input('gameId', sql.UniqueIdentifier, gameId).query(query);
 
-    if (result.recordset.length === 0) {
-        return res.status(404).json({ error: 'Game not found' });
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ error: 'Game not found' });
+        }
+
+        const { random_number, finished } = result.recordset[0];
+        res.json({ gameId, randomNumber: random_number, finished });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while fetching the game' });
     }
-
-    const { random_number, finished } = result.recordset[0];
-    res.json({ gameId, randomNumber: random_number, finished });
-} catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An error occurred while fetching the game' });
-}
 });
 
-//Vad ska hända med spel som inte blir färdiga? Sparas som finished=false i databasen?
 router.post('/delete-game', async (req, res) => {
-  const gameId = req.body.gameId;
-  const query = `
+    const gameId = req.body.gameId;
+    const query = `
       DELETE FROM games 
       WHERE game_id = @gameId
   `;
-  try {
-      const pool = await sql.connect(configDB);
-      await pool.request().input('gameId', sql.UniqueIdentifier, gameId).query(query);
-      res.send({ message: 'Game deleted successfully' });
-  } catch (error) {
-      console.error(error);
-      res.status(500).send({ error: 'An error occurred while deleting the game.' });
-  }
+    try {
+        const pool = await sql.connect(configDB);
+        await pool.request().input('gameId', sql.UniqueIdentifier, gameId).query(query);
+        res.send({ message: 'Game deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'An error occurred while deleting the game.' });
+    }
 });
 
 export default router;

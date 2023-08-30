@@ -84,15 +84,12 @@ export async function getGame(
     try {
         const response = await axios.get(`/get-game?gameId=${gameId}`, {
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+                Authorization: `Bearer ${accessToken}`,
             },
-          });
+        });
 
-        const { randomNumber, finished } = response.data;
+        const { randomNumber } = response.data;
         setRandomNumber(randomNumber);
-        // if (finished) {
-        //     // Handle game over state here
-        // }
     } catch (error) {
         console.error(error);
     }
